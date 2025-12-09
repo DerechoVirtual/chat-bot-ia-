@@ -1,6 +1,6 @@
 /* ========================================
    Derecho Virtual - Embeddable Chatbot Widget
-   Just add one script tag to any website!
+   REWRITTEN: Clean toggle/close button logic
    ======================================== */
 
 (function () {
@@ -9,7 +9,7 @@
     // Configuration - Vercel deployment URL
     const WIDGET_BASE_URL = 'https://chat-bot-ia-nine.vercel.app';
 
-    // API Endpoint (Vercel serverless function - API key is stored securely on server)
+    // API Endpoint (Vercel serverless function)
     const API_ENDPOINT = WIDGET_BASE_URL + '/api/chat';
 
     // Calendly Configuration
@@ -18,12 +18,12 @@
     // Reminder interval (45 seconds)
     const REMINDER_INTERVAL = 45000;
 
-    // Logo URL - hosted on your domain
+    // Logo URL
     const LOGO_URL = WIDGET_BASE_URL + '/logo.jpg';
 
     // Conversation steps - SALES SETTER APPROACH
     const CONVERSATION_STEPS = {
-        0: { message: "¡Ey! 👋 ¿Estudiando Derecho a distancia y agobiado con los exámenes? Tengo algo que puede cambiarte el cuatrimestre �", waitForResponse: true },
+        0: { message: "¡Ey! 👋 ¿Estudiando Derecho a distancia y agobiado con los exámenes? Tengo algo que puede cambiarte el cuatrimestre 🔥", waitForResponse: true },
         1: { message: "Mira, en 30 min te enseño GRATIS cómo aprobar con nuestro método: clases de 15 min, esquemas listos y una IA que te resuelve dudas al momento. ¿Te apuntas? 🎯", waitForResponse: true },
         2: { message: "Genial! Para reservarte hueco en la demo, ¿en qué uni estudias? 🎓", waitForResponse: true, collectField: 'universidad' },
         3: { message: "Perfecto! ¿Cómo te llamas? 😊", waitForResponse: true, collectField: 'nombre' },
@@ -32,16 +32,15 @@
         6: { message: "¡Perfecto {nombre}! 🎉 Haz clic en el botón y elige tu hueco. ¡Hay pocas plazas esta semana!", showCalendly: true }
     };
 
-    // Reminder messages - SALES URGENCY
+    // Reminder messages
     const REMINDER_MESSAGES = [
         "¿Sigues ahí? 👀 Las plazas para esta semana se acaban rápido...",
         "Ey! Solo te faltan 30 segundos para reservar tu demo gratis 🎯",
         "No te quedes sin probar el método que ha ayudado a cientos de alumnos a aprobar 💪",
-        "¿Tienes alguna duda? Pregúntame lo que quieras, estoy aquí para ayudarte 😊",
-        "Mira, la demo es gratis y sin compromiso. ¿Qué pierdes por probar? �"
+        "¿Tienes alguna duda? Pregúntame lo que quieras 😊"
     ];
 
-    // Chatbot State
+    // State
     let chatState = {
         currentStep: 0,
         collectedData: { universidad: '', nombre: '', email: '', telefono: '' },
@@ -49,496 +48,282 @@
         awaitingResponse: false,
         reminderTimer: null,
         reminderCount: 0,
-        lastUserMessageTime: null
+        lastUserMessageTime: null,
+        isOpen: false
     };
 
-    // System prompt - SALES SETTER MINDSET
-    const SYSTEM_PROMPT = `Eres un SETTER DE VENTAS de Derecho Virtual. Tu ÚNICO objetivo es conseguir que el alumno reserve la demo gratuita. Hablas como un chaval universitario pero con mentalidad comercial.
+    // System prompt
+    const SYSTEM_PROMPT = `Eres un SETTER DE VENTAS de Derecho Virtual para estudiantes universitarios. Tu ÚNICO objetivo es conseguir que reserven una demo gratuita.
 
-PERSONALIDAD:
-- Cercano, empático, con algún emoji
-- Mensajes CORTOS (1-2 líneas máximo)
-- Siempre positivo y motivador
-- NUNCA te rindes, siempre reconduces a la demo
+PERSONALIDAD: Estudiante universitario, cercano, usa emojis, mensajes CORTOS (1-2 líneas máximo).
 
 DATOS RECOPILADOS: {{COLLECTED_DATA}}
 CONTEXTO: {{CURRENT_CONTEXT}}
 
-TÉCNICAS DE VENTA QUE USAS:
-1. BENEFICIO: Siempre habla de aprobar exámenes, no de características
-2. URGENCIA: "Las plazas vuelan", "Esta semana hay huecos"
-3. PRUEBA SOCIAL: "Cientos de alumnos ya lo usan"
-4. SIN RIESGO: "Es gratis, sin compromiso, 30 min"
+TÉCNICAS: Beneficio, urgencia, prueba social, sin riesgo.
+REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
 
-MANEJO DE OBJECIONES:
-- "No tengo tiempo" → "Solo son 30 min que te pueden ahorrar meses de estudio. ¿Qué día te viene mejor?"
-- "No me interesa" → "Entiendo, pero ¿no quieres al menos ver cómo otros alumnos de tu uni están aprobando? Es gratis"
-- "Ya tengo mi método" → "Genial! Pero siempre está bien conocer alternativas. En la demo ves si te aporta algo nuevo"
-- "Es caro?" → "La demo es 100% gratis! Y luego ya decides. ¿Te reservo hueco?"
-- Cualquier duda → Responde brevemente y CIERRA: "¿Te apuntas a verlo en la demo?"
-
-REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
-- Si NO tenemos universidad → "¿En qué uni estudias? 🎓"
-- Si tenemos uni pero NO nombre → "¿Cómo te llamas?"
-- Si tenemos nombre pero NO email → "Dame tu email para reservarte"
-- Si tenemos email pero NO teléfono → "¿Y tu móvil?"
-- Si tenemos TODO → celebra y empuja al botón`;
-
-    // Inject CSS
+    // CSS Styles
     function injectStyles() {
         const css = `
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
             
-            .dv-chatbot-toggle {
+            #dv-widget { font-family: 'Inter', sans-serif; }
+            
+            /* TOGGLE BUTTON - Only visible when chat is CLOSED */
+            #dv-toggle {
                 position: fixed;
                 bottom: 1.5rem;
                 right: 1.5rem;
-                width: 80px;
-                height: 80px;
+                width: 70px;
+                height: 70px;
                 background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
                 border-radius: 50%;
+                border: none;
+                cursor: pointer;
+                box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
+                z-index: 999998;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                cursor: pointer;
-                box-shadow: 0 8px 32px rgba(99, 102, 241, 0.5), 0 0 0 0 rgba(99, 102, 241, 0.4);
-                z-index: 999999;
-                transition: all 0.3s ease;
-                border: 4px solid rgba(255, 255, 255, 0.3);
-                animation: dv-pulse-attention 2s infinite, dv-float 3s ease-in-out infinite;
+                animation: dv-pulse 2s infinite;
             }
-            
-            @keyframes dv-pulse-attention {
-                0% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.5), 0 0 0 0 rgba(99, 102, 241, 0.6); }
-                70% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.5), 0 0 0 20px rgba(99, 102, 241, 0); }
-                100% { box-shadow: 0 8px 32px rgba(99, 102, 241, 0.5), 0 0 0 0 rgba(99, 102, 241, 0); }
-            }
-            
-            @keyframes dv-float {
-                0%, 100% { transform: translateY(0); }
-                50% { transform: translateY(-8px); }
-            }
-            
-            .dv-chatbot-toggle:hover {
-                transform: scale(1.15) translateY(-5px);
-                box-shadow: 0 12px 40px rgba(99, 102, 241, 0.6);
-                animation: none;
-            }
-            
-            .dv-chatbot-toggle::before {
+            #dv-toggle.hidden { display: none !important; }
+            #dv-toggle img { width: 45px; height: 45px; border-radius: 50%; }
+            #dv-toggle::after {
                 content: '💬';
                 position: absolute;
-                top: -12px;
-                right: -12px;
+                top: -8px;
+                right: -8px;
                 background: #ef4444;
-                color: white;
-                font-size: 0.75rem;
                 padding: 4px 8px;
                 border-radius: 12px;
-                font-weight: 700;
-                animation: dv-bounce-badge 1s infinite;
+                font-size: 12px;
+            }
+            @keyframes dv-pulse {
+                0%, 100% { transform: scale(1); box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4); }
+                50% { transform: scale(1.05); box-shadow: 0 8px 40px rgba(99, 102, 241, 0.6); }
             }
             
-            @keyframes dv-bounce-badge {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.2); }
-            }
-            
-            .dv-chatbot-toggle .dv-logo-img {
-                width: 50px;
-                height: 50px;
-                object-fit: contain;
-                border-radius: 50%;
-            }
-            
-            .dv-chatbot-toggle .dv-close-icon {
-                display: none;
-                width: 36px;
-                height: 36px;
-                fill: white;
-            }
-            
-            .dv-chatbot-toggle.active { animation: none; }
-            .dv-chatbot-toggle.active::before { display: none; }
-            .dv-chatbot-toggle.active .dv-logo-img { display: none; }
-            .dv-chatbot-toggle.active .dv-close-icon { display: block; }
-            
-            .dv-chatbot-container {
+            /* CHAT CONTAINER */
+            #dv-chat {
                 position: fixed;
-                bottom: 7rem;
+                bottom: 1.5rem;
                 right: 1.5rem;
-                width: 400px;
-                max-width: calc(100vw - 2rem);
-                height: 550px;
-                max-height: calc(100vh - 10rem);
+                width: 380px;
+                height: 520px;
                 background: white;
                 border-radius: 1.5rem;
-                box-shadow: 0 25px 80px rgba(0, 0, 0, 0.25);
+                box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2);
                 display: none;
                 flex-direction: column;
                 overflow: hidden;
-                z-index: 999998;
-                animation: dv-slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-                font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+                z-index: 999999;
             }
-            
-            .dv-chatbot-container.active { display: flex; }
-            
+            #dv-chat.open { display: flex; animation: dv-slideUp 0.3s ease-out; }
             @keyframes dv-slideUp {
-                from { opacity: 0; transform: translateY(30px) scale(0.95); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
             }
             
-            .dv-chatbot-header {
+            /* HEADER with close button */
+            #dv-header {
                 background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
                 color: white;
-                padding: 1.25rem;
+                padding: 1rem;
                 display: flex;
                 align-items: center;
-                gap: 1rem;
+                gap: 0.75rem;
             }
+            #dv-header img { width: 45px; height: 45px; border-radius: 50%; background: rgba(255,255,255,0.1); }
+            #dv-header-info { flex: 1; }
+            #dv-header-info h4 { margin: 0; font-size: 1rem; }
+            #dv-header-info span { font-size: 0.8rem; opacity: 0.8; }
+            #dv-header-info span::before { content: '🟢 '; }
             
-            .dv-chatbot-avatar {
-                width: 50px;
-                height: 50px;
-                background: rgba(255, 255, 255, 0.15);
+            /* CLOSE BUTTON in header */
+            #dv-close {
+                width: 36px;
+                height: 36px;
+                background: rgba(255,255,255,0.2);
+                border: none;
                 border-radius: 50%;
-                overflow: hidden;
-            }
-            
-            .dv-chatbot-avatar img { width: 100%; height: 100%; object-fit: cover; }
-            
-            .dv-chatbot-info h4 {
-                font-size: 1.1rem;
-                font-weight: 700;
-                margin: 0 0 4px 0;
-            }
-            
-            .dv-chatbot-status {
+                cursor: pointer;
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
-                font-size: 0.8rem;
-                opacity: 0.85;
+                justify-content: center;
+                color: white;
+                font-size: 20px;
+                font-weight: bold;
             }
+            #dv-close:hover { background: rgba(255,255,255,0.3); }
             
-            .dv-status-dot {
-                width: 10px;
-                height: 10px;
-                background: #4ade80;
-                border-radius: 50%;
-                animation: dv-pulse 2s infinite;
-                box-shadow: 0 0 8px #4ade80;
-            }
-            
-            @keyframes dv-pulse {
-                0%, 100% { opacity: 1; transform: scale(1); }
-                50% { opacity: 0.6; transform: scale(0.9); }
-            }
-            
-            .dv-chatbot-messages {
+            /* MESSAGES */
+            #dv-messages {
                 flex: 1;
                 overflow-y: auto;
                 padding: 1rem;
                 display: flex;
                 flex-direction: column;
                 gap: 0.75rem;
-                background: linear-gradient(180deg, #f9fafb 0%, white 100%);
+                background: #f9fafb;
             }
-            
-            .dv-chat-message {
+            .dv-msg {
                 max-width: 85%;
                 padding: 0.875rem 1rem;
-                border-radius: 1.25rem;
-                font-size: 0.9375rem;
-                line-height: 1.55;
-                animation: dv-messageIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+                border-radius: 1rem;
+                font-size: 0.9rem;
+                line-height: 1.5;
+                animation: dv-msgIn 0.3s ease-out;
             }
-            
-            @keyframes dv-messageIn {
-                from { opacity: 0; transform: translateY(15px) scale(0.95); }
-                to { opacity: 1; transform: translateY(0) scale(1); }
+            @keyframes dv-msgIn {
+                from { opacity: 0; transform: translateY(10px); }
+                to { opacity: 1; transform: translateY(0); }
             }
-            
-            .dv-chat-message.bot {
+            .dv-msg.bot {
                 background: white;
-                color: #374151;
                 align-self: flex-start;
-                border-bottom-left-radius: 6px;
-                box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
                 border-left: 3px solid #6366f1;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.06);
             }
-            
-            .dv-chat-message.user {
+            .dv-msg.user {
                 background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
                 color: white;
                 align-self: flex-end;
-                border-bottom-right-radius: 6px;
             }
-            
-            .dv-chat-message.typing {
-                display: flex;
-                gap: 5px;
-                padding: 1rem 1.25rem;
-            }
-            
-            .dv-typing-dot {
-                width: 10px;
-                height: 10px;
+            .dv-typing { display: flex; gap: 4px; padding: 1rem; }
+            .dv-typing span {
+                width: 8px; height: 8px;
                 background: #6366f1;
                 border-radius: 50%;
-                animation: dv-typingBounce 1.4s infinite ease-in-out;
+                animation: dv-bounce 1.4s infinite;
             }
-            
-            .dv-typing-dot:nth-child(2) { animation-delay: 0.2s; }
-            .dv-typing-dot:nth-child(3) { animation-delay: 0.4s; }
-            
-            @keyframes dv-typingBounce {
+            .dv-typing span:nth-child(2) { animation-delay: 0.2s; }
+            .dv-typing span:nth-child(3) { animation-delay: 0.4s; }
+            @keyframes dv-bounce {
                 0%, 80%, 100% { transform: translateY(0); }
-                40% { transform: translateY(-8px); }
+                40% { transform: translateY(-6px); }
             }
             
-            .dv-chatbot-input {
-                padding: 1rem;
+            /* INPUT */
+            #dv-input-wrap {
+                padding: 0.75rem 1rem;
                 background: white;
                 border-top: 1px solid #e5e7eb;
                 display: flex;
-                gap: 0.75rem;
+                gap: 0.5rem;
             }
-            
-            .dv-chatbot-input input {
+            #dv-input {
                 flex: 1;
-                padding: 0.875rem 1.25rem;
+                padding: 0.75rem 1rem;
                 border: 2px solid #e5e7eb;
                 border-radius: 2rem;
-                font-size: 0.9375rem;
-                font-family: inherit;
+                font-size: 0.9rem;
                 outline: none;
-                transition: all 0.2s ease;
             }
-            
-            .dv-chatbot-input input:focus {
-                border-color: #6366f1;
-                box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
-            }
-            
-            .dv-chatbot-input button {
-                width: 48px;
-                height: 48px;
+            #dv-input:focus { border-color: #6366f1; }
+            #dv-send {
+                width: 44px;
+                height: 44px;
                 background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
                 border: none;
                 border-radius: 50%;
                 cursor: pointer;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: all 0.25s ease;
+                color: white;
+                font-size: 18px;
             }
             
-            .dv-chatbot-input button:hover {
-                transform: scale(1.1);
-                box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
-            }
-            
-            .dv-chatbot-input button svg {
-                width: 22px;
-                height: 22px;
-                fill: white;
-            }
-            
-            .dv-calendly-btn {
+            /* CALENDLY BUTTON */
+            .dv-calendly {
                 background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
                 color: white;
                 border: none;
-                padding: 16px 32px;
-                border-radius: 30px;
-                font-size: 1.1rem;
-                font-weight: 700;
+                padding: 14px 28px;
+                border-radius: 2rem;
+                font-size: 1rem;
+                font-weight: 600;
                 cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 10px;
-                margin: 15px auto;
-                box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
-                transition: all 0.3s ease;
-                animation: dv-pulse-btn 2s infinite;
+                margin: 1rem auto;
+                display: block;
+                animation: dv-pulse 2s infinite;
             }
             
-            @keyframes dv-pulse-btn {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.05); }
-            }
-            
-            @media (max-width: 480px) {
-                .dv-chatbot-container {
-                    bottom: 0;
-                    right: 0;
-                    left: 0;
-                    width: 100%;
-                    max-width: 100%;
-                    height: 100vh;
-                    max-height: 100vh;
+            /* MOBILE */
+            @media (max-width: 500px) {
+                #dv-toggle { width: 60px; height: 60px; bottom: 1rem; right: 1rem; }
+                #dv-toggle img { width: 40px; height: 40px; }
+                #dv-chat {
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    width: 100%; height: 100%;
                     border-radius: 0;
-                    z-index: 9999999;
                 }
-                /* Hide toggle when chat is open on mobile */
-                body[data-dv-chat-open="true"] .dv-chatbot-toggle {
-                    display: none !important;
-                    visibility: hidden !important;
-                    opacity: 0 !important;
-                    pointer-events: none !important;
-                    width: 0 !important;
-                    height: 0 !important;
-                }
-                .dv-chatbot-toggle {
-                    bottom: 1rem;
-                    right: 1rem;
-                    width: 65px;
-                    height: 65px;
-                }
-                .dv-header-close {
-                    display: flex !important;
-                }
-                .dv-chatbot-header {
-                    padding: 1rem;
-                }
-                .dv-chatbot-input {
-                    padding: 0.75rem;
-                    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
-                }
-                .dv-chatbot-input input {
-                    padding: 0.75rem 1rem;
-                    font-size: 16px;
-                }
-                .dv-chat-message {
-                    max-width: 90%;
-                    font-size: 0.9rem;
-                }
-            }
-            
-            .dv-header-close {
-                display: none;
-                margin-left: auto;
-                background: rgba(255,255,255,0.2);
-                border: none;
-                border-radius: 50%;
-                width: 36px;
-                height: 36px;
-                cursor: pointer;
-                align-items: center;
-                justify-content: center;
-                transition: background 0.2s;
-            }
-            .dv-header-close:hover {
-                background: rgba(255,255,255,0.3);
-            }
-            .dv-header-close svg {
-                width: 20px;
-                height: 20px;
-                fill: white;
+                #dv-input { font-size: 16px; }
             }
         `;
-
         const style = document.createElement('style');
         style.textContent = css;
         document.head.appendChild(style);
     }
 
-    // Create HTML
+    // HTML Structure
     function createHTML() {
         const html = `
-            <button class="dv-chatbot-toggle" id="dv-chatbot-toggle">
-                <img src="${LOGO_URL}" alt="Derecho Virtual" class="dv-logo-img" onerror="this.outerHTML='📚'">
-                <svg class="dv-close-icon" viewBox="0 0 24 24">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
-                </svg>
+            <button id="dv-toggle">
+                <img src="${LOGO_URL}" alt="Chat" onerror="this.outerHTML='📚'">
             </button>
-            <div class="dv-chatbot-container" id="dv-chatbot-container">
-                <div class="dv-chatbot-header">
-                    <div class="dv-chatbot-avatar">
-                        <img src="${LOGO_URL}" alt="Derecho Virtual" onerror="this.outerHTML='📚'">
-                    </div>
-                    <div class="dv-chatbot-info">
+            <div id="dv-chat">
+                <div id="dv-header">
+                    <img src="${LOGO_URL}" alt="DV" onerror="this.outerHTML='📚'">
+                    <div id="dv-header-info">
                         <h4>Derecho Virtual</h4>
-                        <div class="dv-chatbot-status">
-                            <span class="dv-status-dot"></span>
-                            <span>En línea</span>
-                        </div>
+                        <span>En línea</span>
                     </div>
-                    <button class="dv-header-close" id="dv-header-close">
-                        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
-                    </button>
+                    <button id="dv-close">✕</button>
                 </div>
-                <div class="dv-chatbot-messages" id="dv-chatbot-messages"></div>
-                <div class="dv-chatbot-input">
-                    <input type="text" id="dv-chatbot-input" placeholder="Escribe algo..." autocomplete="off">
-                    <button type="button" id="dv-chatbot-send">
-                        <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
-                    </button>
+                <div id="dv-messages"></div>
+                <div id="dv-input-wrap">
+                    <input type="text" id="dv-input" placeholder="Escribe algo..." autocomplete="off">
+                    <button id="dv-send">➤</button>
                 </div>
             </div>
         `;
+        const div = document.createElement('div');
+        div.id = 'dv-widget';
+        div.innerHTML = html;
+        document.body.appendChild(div);
+    }
 
-        const container = document.createElement('div');
-        container.id = 'dv-chatbot-widget';
-        container.innerHTML = html;
-        document.body.appendChild(container);
+    // Open chat
+    function openChat() {
+        document.getElementById('dv-toggle').classList.add('hidden');
+        document.getElementById('dv-chat').classList.add('open');
+        chatState.isOpen = true;
+        if (chatState.currentStep === 0 && chatState.conversationHistory.length === 0) {
+            sendNextBotMessage();
+            startReminderTimer();
+        }
+        document.getElementById('dv-input').focus();
+    }
+
+    // Close chat
+    function closeChat() {
+        document.getElementById('dv-toggle').classList.remove('hidden');
+        document.getElementById('dv-chat').classList.remove('open');
+        chatState.isOpen = false;
+        stopReminderTimer();
     }
 
     // Initialize
     function init() {
-        const toggle = document.getElementById('dv-chatbot-toggle');
-        const container = document.getElementById('dv-chatbot-container');
-        const input = document.getElementById('dv-chatbot-input');
-        const sendBtn = document.getElementById('dv-chatbot-send');
-        const headerClose = document.getElementById('dv-header-close');
-
-        // Check if mobile
-        const isMobile = window.innerWidth <= 480;
-
-        function openChat() {
-            container.classList.add('active');
-            toggle.classList.add('active');
-            // Force hide toggle on mobile
-            if (isMobile) {
-                toggle.style.cssText = 'display: none !important; visibility: hidden !important;';
-                toggle.hidden = true;
-                document.body.setAttribute('data-dv-chat-open', 'true');
-            }
-            if (chatState.currentStep === 0 && chatState.conversationHistory.length === 0) {
-                sendNextBotMessage();
-                startReminderTimer();
-            }
-            input.focus();
-        }
-
-        function closeChat() {
-            container.classList.remove('active');
-            toggle.classList.remove('active');
-            // Show toggle again
-            toggle.style.cssText = '';
-            toggle.hidden = false;
-            document.body.removeAttribute('data-dv-chat-open');
-            stopReminderTimer();
-        }
-
-        toggle.addEventListener('click', function () {
-            if (container.classList.contains('active')) {
-                closeChat();
-            } else {
-                openChat();
-            }
-        });
-
-        // Header close button for mobile
-        headerClose.addEventListener('click', closeChat);
-
-        sendBtn.addEventListener('click', handleSendMessage);
-        input.addEventListener('keypress', function (e) {
+        document.getElementById('dv-toggle').addEventListener('click', openChat);
+        document.getElementById('dv-close').addEventListener('click', closeChat);
+        document.getElementById('dv-send').addEventListener('click', handleSendMessage);
+        document.getElementById('dv-input').addEventListener('keypress', (e) => {
             if (e.key === 'Enter') handleSendMessage();
         });
     }
 
+    // Reminder timer
     function startReminderTimer() {
         stopReminderTimer();
         chatState.lastUserMessageTime = Date.now();
@@ -557,237 +342,184 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
     }
 
     function sendReminder() {
-        // Max 4 reminders to avoid harassment
         if (chatState.reminderCount >= 4) {
             stopReminderTimer();
-            sendBotMessage("Bueno, te dejo tranquilo 😊 Si te interesa, aquí estaré. ¡Mucha suerte con los exámenes! 🍀");
+            addMessage("Te dejo tranquilo 😊 Si te interesa, aquí estaré. ¡Suerte con los exámenes! 🍀", 'bot');
             return;
         }
-
         if (chatState.reminderCount >= REMINDER_MESSAGES.length) chatState.reminderCount = 0;
-        sendBotMessage(REMINDER_MESSAGES[chatState.reminderCount]);
+        addMessage(REMINDER_MESSAGES[chatState.reminderCount], 'bot');
         chatState.reminderCount++;
         chatState.lastUserMessageTime = Date.now();
     }
 
+    // Send next bot message
     function sendNextBotMessage() {
         const step = CONVERSATION_STEPS[chatState.currentStep];
         if (!step) return;
-
-        let message = step.message;
+        let msg = step.message;
         if (chatState.collectedData.nombre) {
-            message = message.replace('{nombre}', chatState.collectedData.nombre);
+            msg = msg.replace('{nombre}', chatState.collectedData.nombre);
         }
-
-        sendBotMessage(message);
-        updateInputAutocomplete(step.collectField);
-
+        addMessage(msg, 'bot');
+        updateInputField(step.collectField);
         if (step.showCalendly) {
-            setTimeout(showCalendlyButton, 1000);
+            setTimeout(showCalendlyButton, 800);
             stopReminderTimer();
         }
-
         chatState.awaitingResponse = step.waitForResponse || false;
     }
 
+    // Handle user message
     async function handleSendMessage() {
-        const input = document.getElementById('dv-chatbot-input');
-        const message = input.value.trim();
-        if (!message) return;
-
+        const input = document.getElementById('dv-input');
+        const msg = input.value.trim();
+        if (!msg) return;
         input.value = '';
         chatState.lastUserMessageTime = Date.now();
         chatState.reminderCount = 0;
+        addMessage(msg, 'user');
+        chatState.conversationHistory.push({ role: 'user', content: msg });
 
-        addMessage(message, 'user');
-        chatState.conversationHistory.push({ role: 'user', content: message });
+        const step = CONVERSATION_STEPS[chatState.currentStep];
+        const isQuestion = msg.includes('?') || msg.toLowerCase().includes('cuánto') || msg.toLowerCase().includes('precio');
 
-        const currentStep = CONVERSATION_STEPS[chatState.currentStep];
-
-        const isQuestion = message.includes('?') ||
-            message.toLowerCase().includes('para qué') ||
-            message.toLowerCase().includes('no quiero');
-
-        if (isQuestion && currentStep && currentStep.collectField) {
-            showTypingIndicator();
+        if (isQuestion && step && step.collectField) {
+            showTyping();
             try {
-                const response = await handleOffScriptQuestion(message);
-                hideTypingIndicator();
-                sendBotMessage(response);
+                const resp = await callAI(msg);
+                hideTyping();
+                addMessage(resp, 'bot');
                 setTimeout(sendNextBotMessage, 1500);
-            } catch (error) {
-                hideTypingIndicator();
-                sendBotMessage('Uy, algo ha fallado 😅 ¿Puedes repetirlo?');
+            } catch {
+                hideTyping();
+                addMessage('Disculpa, ha habido un error. ¿Puedes repetirlo?', 'bot');
             }
             return;
         }
 
-        if (currentStep && currentStep.collectField) {
-            chatState.collectedData[currentStep.collectField] = extractData(message, currentStep.collectField);
+        if (step && step.collectField) {
+            chatState.collectedData[step.collectField] = extractData(msg, step.collectField);
         }
-
         chatState.currentStep++;
-
         if (CONVERSATION_STEPS[chatState.currentStep]) {
-            setTimeout(sendNextBotMessage, 800);
+            setTimeout(sendNextBotMessage, 600);
         }
     }
 
-    function extractData(message, fieldType) {
-        const clean = message.trim();
-        switch (fieldType) {
-            case 'email':
-                const emailMatch = clean.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-                return emailMatch ? emailMatch[0].toLowerCase() : clean;
-            case 'telefono':
-                let phone = clean.replace(/[\s.\-()]/g, '').replace(/^(\+?34|0034)/, '');
-                phone = phone.replace(/\D/g, '');
-                if (phone.length > 9) phone = phone.slice(-9);
-                return '+34' + phone;
-            case 'nombre':
-                return clean.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-            default:
-                return clean;
+    // Extract data
+    function extractData(msg, field) {
+        const clean = msg.trim();
+        if (field === 'email') {
+            const m = clean.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+            return m ? m[0].toLowerCase() : clean;
         }
+        if (field === 'telefono') {
+            let p = clean.replace(/[\s.\-()]/g, '').replace(/^(\+?34|0034)/, '').replace(/\D/g, '');
+            if (p.length > 9) p = p.slice(-9);
+            return '+34' + p;
+        }
+        if (field === 'nombre') {
+            return clean.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+        }
+        return clean;
     }
 
-    async function handleOffScriptQuestion(question) {
-        const dataStatus = Object.entries(chatState.collectedData)
-            .filter(([k, v]) => v)
-            .map(([k, v]) => `${k}: ${v}`)
-            .join('\n') || 'Ninguno';
+    // Call AI
+    async function callAI(question) {
+        const dataStatus = Object.entries(chatState.collectedData).filter(([k, v]) => v).map(([k, v]) => `${k}: ${v}`).join('\n') || 'Ninguno';
+        const step = CONVERSATION_STEPS[chatState.currentStep];
+        const ctx = step?.collectField ? `Pidiendo: ${step.collectField}` : 'Inicio';
+        const prompt = SYSTEM_PROMPT.replace('{{COLLECTED_DATA}}', dataStatus).replace('{{CURRENT_CONTEXT}}', ctx);
 
-        const currentStepInfo = CONVERSATION_STEPS[chatState.currentStep];
-        const contextStr = currentStepInfo?.collectField ? `Pidiendo: ${currentStepInfo.collectField}` : 'Inicio';
-
-        const systemPrompt = SYSTEM_PROMPT
-            .replace('{{COLLECTED_DATA}}', dataStatus)
-            .replace('{{CURRENT_CONTEXT}}', contextStr);
-
-        const response = await fetch(API_ENDPOINT, {
+        const resp = await fetch(API_ENDPOINT, {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: question }],
+                messages: [{ role: 'system', content: prompt }, { role: 'user', content: question }],
                 temperature: 0.8,
                 max_tokens: 100
             })
         });
-
-        if (!response.ok) throw new Error('API failed');
-        const data = await response.json();
+        if (!resp.ok) throw new Error('API failed');
+        const data = await resp.json();
         return data.choices[0].message.content;
     }
 
-    function showCalendlyButton() {
-        const container = document.getElementById('dv-chatbot-messages');
-        if (container.querySelector('.dv-calendly-btn')) return;
-
-        const btn = document.createElement('button');
-        btn.className = 'dv-calendly-btn';
-        btn.innerHTML = '🗓️ ¡Elegir Fecha y Hora!';
-        btn.onclick = openCalendly;
-        container.appendChild(btn);
-        container.scrollTop = container.scrollHeight;
-    }
-
-    function openCalendly() {
-        const data = chatState.collectedData;
-        const params = new URLSearchParams({
-            name: data.nombre || '',
-            email: data.email || '',
-            a1: data.telefono || '',
-            a2: data.universidad || ''
-        });
-        window.open(`${CALENDLY_URL}?${params.toString()}`, '_blank');
-        setTimeout(() => {
-            sendBotMessage('¡Genial! Elige cuando te venga bien y te llegará un email. ¡Nos vemos en la demo! 🚀');
-        }, 500);
-    }
-
+    // UI helpers
     function addMessage(text, type) {
-        const container = document.getElementById('dv-chatbot-messages');
+        const container = document.getElementById('dv-messages');
         const div = document.createElement('div');
-        div.className = `dv-chat-message ${type}`;
+        div.className = `dv-msg ${type}`;
         div.textContent = text;
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
+        chatState.conversationHistory.push({ role: type === 'bot' ? 'assistant' : 'user', content: text });
     }
 
-    function sendBotMessage(text) {
-        addMessage(text, 'bot');
-        chatState.conversationHistory.push({ role: 'assistant', content: text });
-    }
-
-    function showTypingIndicator() {
-        const container = document.getElementById('dv-chatbot-messages');
+    function showTyping() {
+        const container = document.getElementById('dv-messages');
         const div = document.createElement('div');
-        div.className = 'dv-chat-message bot typing';
-        div.id = 'dv-typing-indicator';
-        div.innerHTML = '<span class="dv-typing-dot"></span><span class="dv-typing-dot"></span><span class="dv-typing-dot"></span>';
+        div.className = 'dv-msg bot dv-typing';
+        div.id = 'dv-typing';
+        div.innerHTML = '<span></span><span></span><span></span>';
         container.appendChild(div);
         container.scrollTop = container.scrollHeight;
     }
 
-    function hideTypingIndicator() {
-        const indicator = document.getElementById('dv-typing-indicator');
-        if (indicator) indicator.remove();
+    function hideTyping() {
+        const el = document.getElementById('dv-typing');
+        if (el) el.remove();
     }
 
-    function updateInputAutocomplete(fieldType) {
-        const input = document.getElementById('dv-chatbot-input');
-        if (!input) return;
-
-        const config = {
+    function updateInputField(field) {
+        const input = document.getElementById('dv-input');
+        const cfg = {
             'email': { autocomplete: 'email', placeholder: 'tu@email.com', type: 'email' },
             'telefono': { autocomplete: 'tel', placeholder: '612 345 678', type: 'tel' },
             'nombre': { autocomplete: 'name', placeholder: 'Tu nombre...', type: 'text' },
             'universidad': { autocomplete: 'organization', placeholder: 'Tu universidad...', type: 'text' }
-        }[fieldType] || { autocomplete: 'off', placeholder: 'Escribe algo...', type: 'text' };
-
-        input.setAttribute('autocomplete', config.autocomplete);
-        input.setAttribute('placeholder', config.placeholder);
-        input.setAttribute('type', config.type);
+        }[field] || { autocomplete: 'off', placeholder: 'Escribe algo...', type: 'text' };
+        input.setAttribute('autocomplete', cfg.autocomplete);
+        input.setAttribute('placeholder', cfg.placeholder);
+        input.setAttribute('type', cfg.type);
     }
 
-    // Auto-open chatbot after 25 seconds if not opened manually
-    function autoOpen() {
-        const toggle = document.getElementById('dv-chatbot-toggle');
-        const container = document.getElementById('dv-chatbot-container');
-        const input = document.getElementById('dv-chatbot-input');
-        const isMobile = window.innerWidth <= 480;
+    function showCalendlyButton() {
+        const container = document.getElementById('dv-messages');
+        if (container.querySelector('.dv-calendly')) return;
+        const btn = document.createElement('button');
+        btn.className = 'dv-calendly';
+        btn.textContent = '🗓️ ¡Reservar Demo Gratis!';
+        btn.onclick = () => {
+            const d = chatState.collectedData;
+            const params = new URLSearchParams({ name: d.nombre, email: d.email, a1: d.telefono, a2: d.universidad });
+            window.open(`${CALENDLY_URL}?${params}`, '_blank');
+            setTimeout(() => addMessage('¡Genial! Elige el mejor día. Te llegará confirmación por email 📩', 'bot'), 500);
+        };
+        container.appendChild(btn);
+        container.scrollTop = container.scrollHeight;
+    }
 
-        // Only auto-open if chat hasn't been opened yet
-        if (!container.classList.contains('active') && chatState.conversationHistory.length === 0) {
-            container.classList.add('active');
-            toggle.classList.add('active');
-            if (isMobile) {
-                toggle.style.cssText = 'display: none !important; visibility: hidden !important;';
-                toggle.hidden = true;
-                document.body.setAttribute('data-dv-chat-open', 'true');
-            }
-            sendNextBotMessage();
-            startReminderTimer();
-            input.focus();
+    // Auto-open after 25 seconds
+    function autoOpen() {
+        if (!chatState.isOpen && chatState.conversationHistory.length === 0) {
+            openChat();
         }
     }
 
-    // Auto-initialize when DOM is ready
+    // Initialize
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener('DOMContentLoaded', () => {
             injectStyles();
             createHTML();
             init();
-            // Auto-open after 25 seconds
             setTimeout(autoOpen, 25000);
         });
     } else {
         injectStyles();
         createHTML();
         init();
-        // Auto-open after 25 seconds
         setTimeout(autoOpen, 25000);
     }
 
