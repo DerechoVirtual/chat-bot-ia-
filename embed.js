@@ -6,8 +6,8 @@
 (function () {
     'use strict';
 
-    // Configuration - Change this URL after deploying to Vercel
-    const WIDGET_BASE_URL = 'https://tu-dominio.vercel.app'; // CAMBIAR POR TU URL DE VERCEL
+    // Configuration - Vercel deployment URL
+    const WIDGET_BASE_URL = 'https://chat-bot-ia-nine.vercel.app';
 
     // API Endpoint (Vercel serverless function - API key is stored securely on server)
     const API_ENDPOINT = WIDGET_BASE_URL + '/api/chat';
