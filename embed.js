@@ -381,12 +381,14 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
                     border-radius: 0;
                     z-index: 9999999;
                 }
-                .dv-chatbot-toggle.active,
-                .dv-chatbot-toggle[style*="display: none"] {
+                /* Hide toggle when chat is open on mobile */
+                body[data-dv-chat-open="true"] .dv-chatbot-toggle {
                     display: none !important;
                     visibility: hidden !important;
                     opacity: 0 !important;
                     pointer-events: none !important;
+                    width: 0 !important;
+                    height: 0 !important;
                 }
                 .dv-chatbot-toggle {
                     bottom: 1rem;
@@ -497,7 +499,10 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
         function openChat() {
             container.classList.add('active');
             toggle.classList.add('active');
-            if (isMobile) toggle.style.display = 'none';
+            // Add body attribute for CSS to hide toggle on mobile
+            if (isMobile) {
+                document.body.setAttribute('data-dv-chat-open', 'true');
+            }
             if (chatState.currentStep === 0 && chatState.conversationHistory.length === 0) {
                 sendNextBotMessage();
                 startReminderTimer();
@@ -508,7 +513,7 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
         function closeChat() {
             container.classList.remove('active');
             toggle.classList.remove('active');
-            toggle.style.display = '';
+            document.body.removeAttribute('data-dv-chat-open');
             stopReminderTimer();
         }
 
@@ -753,7 +758,7 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
         if (!container.classList.contains('active') && chatState.conversationHistory.length === 0) {
             container.classList.add('active');
             toggle.classList.add('active');
-            if (isMobile) toggle.style.display = 'none';
+            if (isMobile) document.body.setAttribute('data-dv-chat-open', 'true');
             sendNextBotMessage();
             startReminderTimer();
             input.focus();
