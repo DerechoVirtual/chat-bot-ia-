@@ -381,7 +381,7 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
                     border-radius: 0;
                     z-index: 9999999;
                 }
-                .dv-chatbot-container.active ~ .dv-chatbot-toggle {
+                .dv-chatbot-toggle.active {
                     display: none !important;
                 }
                 .dv-chatbot-toggle {
@@ -390,14 +390,8 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
                     width: 65px;
                     height: 65px;
                 }
-                .dv-chatbot-toggle.active {
-                    position: fixed;
-                    bottom: auto;
-                    top: 1rem;
-                    right: 1rem;
-                    width: 50px;
-                    height: 50px;
-                    z-index: 99999999;
+                .dv-header-close {
+                    display: flex !important;
                 }
                 .dv-chatbot-header {
                     padding: 1rem;
@@ -408,12 +402,34 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
                 }
                 .dv-chatbot-input input {
                     padding: 0.75rem 1rem;
-                    font-size: 16px; /* Prevents zoom on iOS */
+                    font-size: 16px;
                 }
                 .dv-chat-message {
                     max-width: 90%;
                     font-size: 0.9rem;
                 }
+            }
+            
+            .dv-header-close {
+                display: none;
+                margin-left: auto;
+                background: rgba(255,255,255,0.2);
+                border: none;
+                border-radius: 50%;
+                width: 36px;
+                height: 36px;
+                cursor: pointer;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.2s;
+            }
+            .dv-header-close:hover {
+                background: rgba(255,255,255,0.3);
+            }
+            .dv-header-close svg {
+                width: 20px;
+                height: 20px;
+                fill: white;
             }
         `;
 
@@ -443,6 +459,9 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
                             <span>En línea</span>
                         </div>
                     </div>
+                    <button class="dv-header-close" id="dv-header-close">
+                        <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+                    </button>
                 </div>
                 <div class="dv-chatbot-messages" id="dv-chatbot-messages"></div>
                 <div class="dv-chatbot-input">
@@ -466,6 +485,13 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
         const container = document.getElementById('dv-chatbot-container');
         const input = document.getElementById('dv-chatbot-input');
         const sendBtn = document.getElementById('dv-chatbot-send');
+        const headerClose = document.getElementById('dv-header-close');
+
+        function closeChat() {
+            container.classList.remove('active');
+            toggle.classList.remove('active');
+            stopReminderTimer();
+        }
 
         toggle.addEventListener('click', function () {
             container.classList.toggle('active');
@@ -482,6 +508,9 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
                 stopReminderTimer();
             }
         });
+
+        // Header close button for mobile
+        headerClose.addEventListener('click', closeChat);
 
         sendBtn.addEventListener('click', handleSendMessage);
         input.addEventListener('keypress', function (e) {
