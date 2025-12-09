@@ -1,6 +1,6 @@
 /* ========================================
    Derecho Virtual - Embeddable Chatbot Widget
-   REWRITTEN: Clean toggle/close button logic
+   REWRITTEN: NO TOGGLE BUTTON - AUTO OPEN ONLY
    ======================================== */
 
 (function () {
@@ -69,31 +69,6 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
             
             #dv-widget { font-family: 'Inter', sans-serif; }
-            
-            /* TOGGLE BUTTON - Small, top-right, only when chat CLOSED */
-            #dv-toggle {
-                position: fixed;
-                top: 1rem;
-                right: 1rem;
-                width: 40px;
-                height: 40px;
-                background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
-                border-radius: 50%;
-                border: none;
-                cursor: pointer;
-                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
-                z-index: 999998;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                transition: transform 0.2s, box-shadow 0.2s;
-            }
-            #dv-toggle:hover {
-                transform: scale(1.1);
-                box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
-            }
-            #dv-toggle.hidden { display: none !important; }
-            #dv-toggle span { color: white; font-size: 18px; }
             
             /* CHAT CONTAINER */
             #dv-chat {
@@ -240,8 +215,6 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
             
             /* MOBILE */
             @media (max-width: 500px) {
-                #dv-toggle { width: 36px; height: 36px; top: 0.75rem; right: 0.75rem; }
-                #dv-toggle span { font-size: 16px; }
                 #dv-chat {
                     top: 0; left: 0; right: 0; bottom: 0;
                     width: 100%; height: 100%;
@@ -258,9 +231,6 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
     // HTML Structure
     function createHTML() {
         const html = `
-            <button id="dv-toggle">
-                <span>✕</span>
-            </button>
             <div id="dv-chat">
                 <div id="dv-header">
                     <img src="${LOGO_URL}" alt="DV" onerror="this.outerHTML='📚'">
@@ -285,7 +255,6 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
 
     // Open chat
     function openChat() {
-        document.getElementById('dv-toggle').classList.add('hidden');
         document.getElementById('dv-chat').classList.add('open');
         chatState.isOpen = true;
         if (chatState.currentStep === 0 && chatState.conversationHistory.length === 0) {
@@ -297,7 +266,6 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
 
     // Close chat
     function closeChat() {
-        document.getElementById('dv-toggle').classList.remove('hidden');
         document.getElementById('dv-chat').classList.remove('open');
         chatState.isOpen = false;
         stopReminderTimer();
@@ -305,7 +273,6 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
 
     // Initialize
     function init() {
-        document.getElementById('dv-toggle').addEventListener('click', openChat);
         document.getElementById('dv-close').addEventListener('click', closeChat);
         document.getElementById('dv-send').addEventListener('click', handleSendMessage);
         document.getElementById('dv-input').addEventListener('keypress', (e) => {
