@@ -487,25 +487,32 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
         const sendBtn = document.getElementById('dv-chatbot-send');
         const headerClose = document.getElementById('dv-header-close');
 
+        // Check if mobile
+        const isMobile = window.innerWidth <= 480;
+
+        function openChat() {
+            container.classList.add('active');
+            toggle.classList.add('active');
+            if (isMobile) toggle.style.display = 'none';
+            if (chatState.currentStep === 0 && chatState.conversationHistory.length === 0) {
+                sendNextBotMessage();
+                startReminderTimer();
+            }
+            input.focus();
+        }
+
         function closeChat() {
             container.classList.remove('active');
             toggle.classList.remove('active');
+            toggle.style.display = '';
             stopReminderTimer();
         }
 
         toggle.addEventListener('click', function () {
-            container.classList.toggle('active');
-            toggle.classList.toggle('active');
-
-            if (container.classList.contains('active') && chatState.currentStep === 0 && chatState.conversationHistory.length === 0) {
-                sendNextBotMessage();
-                startReminderTimer();
-            }
-
             if (container.classList.contains('active')) {
-                input.focus();
+                closeChat();
             } else {
-                stopReminderTimer();
+                openChat();
             }
         });
 
@@ -736,11 +743,13 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
         const toggle = document.getElementById('dv-chatbot-toggle');
         const container = document.getElementById('dv-chatbot-container');
         const input = document.getElementById('dv-chatbot-input');
+        const isMobile = window.innerWidth <= 480;
 
         // Only auto-open if chat hasn't been opened yet
         if (!container.classList.contains('active') && chatState.conversationHistory.length === 0) {
             container.classList.add('active');
             toggle.classList.add('active');
+            if (isMobile) toggle.style.display = 'none';
             sendNextBotMessage();
             startReminderTimer();
             input.focus();
