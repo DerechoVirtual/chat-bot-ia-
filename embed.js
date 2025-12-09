@@ -499,8 +499,10 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
         function openChat() {
             container.classList.add('active');
             toggle.classList.add('active');
-            // Add body attribute for CSS to hide toggle on mobile
+            // Force hide toggle on mobile
             if (isMobile) {
+                toggle.style.cssText = 'display: none !important; visibility: hidden !important;';
+                toggle.hidden = true;
                 document.body.setAttribute('data-dv-chat-open', 'true');
             }
             if (chatState.currentStep === 0 && chatState.conversationHistory.length === 0) {
@@ -513,6 +515,9 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
         function closeChat() {
             container.classList.remove('active');
             toggle.classList.remove('active');
+            // Show toggle again
+            toggle.style.cssText = '';
+            toggle.hidden = false;
             document.body.removeAttribute('data-dv-chat-open');
             stopReminderTimer();
         }
@@ -758,7 +763,11 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
         if (!container.classList.contains('active') && chatState.conversationHistory.length === 0) {
             container.classList.add('active');
             toggle.classList.add('active');
-            if (isMobile) document.body.setAttribute('data-dv-chat-open', 'true');
+            if (isMobile) {
+                toggle.style.cssText = 'display: none !important; visibility: hidden !important;';
+                toggle.hidden = true;
+                document.body.setAttribute('data-dv-chat-open', 'true');
+            }
             sendNextBotMessage();
             startReminderTimer();
             input.focus();
