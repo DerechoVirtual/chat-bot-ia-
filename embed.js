@@ -373,17 +373,46 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
                 .dv-chatbot-container {
                     bottom: 0;
                     right: 0;
+                    left: 0;
                     width: 100%;
                     max-width: 100%;
-                    height: 100%;
-                    max-height: 100%;
+                    height: 100vh;
+                    max-height: 100vh;
                     border-radius: 0;
+                    z-index: 9999999;
+                }
+                .dv-chatbot-container.active ~ .dv-chatbot-toggle {
+                    display: none !important;
                 }
                 .dv-chatbot-toggle {
                     bottom: 1rem;
                     right: 1rem;
-                    width: 70px;
-                    height: 70px;
+                    width: 65px;
+                    height: 65px;
+                }
+                .dv-chatbot-toggle.active {
+                    position: fixed;
+                    bottom: auto;
+                    top: 1rem;
+                    right: 1rem;
+                    width: 50px;
+                    height: 50px;
+                    z-index: 99999999;
+                }
+                .dv-chatbot-header {
+                    padding: 1rem;
+                }
+                .dv-chatbot-input {
+                    padding: 0.75rem;
+                    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0));
+                }
+                .dv-chatbot-input input {
+                    padding: 0.75rem 1rem;
+                    font-size: 16px; /* Prevents zoom on iOS */
+                }
+                .dv-chat-message {
+                    max-width: 90%;
+                    font-size: 0.9rem;
                 }
             }
         `;
