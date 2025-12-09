@@ -48,6 +48,11 @@ export default async function handler(req, res) {
 
     } catch (error) {
         console.error('OpenAI API error:', error);
-        return res.status(500).json({ error: 'Failed to call OpenAI API' });
+        return res.status(500).json({
+            error: 'Failed to call OpenAI API',
+            details: error.message,
+            stack: error.stack,
+            hasFetch: typeof fetch !== 'undefined'
+        });
     }
 }
