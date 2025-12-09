@@ -70,40 +70,30 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
             
             #dv-widget { font-family: 'Inter', sans-serif; }
             
-            /* TOGGLE BUTTON - Only visible when chat is CLOSED */
+            /* TOGGLE BUTTON - Small, top-right, only when chat CLOSED */
             #dv-toggle {
                 position: fixed;
-                bottom: 1.5rem;
-                right: 1.5rem;
-                width: 70px;
-                height: 70px;
+                top: 1rem;
+                right: 1rem;
+                width: 40px;
+                height: 40px;
                 background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
                 border-radius: 50%;
                 border: none;
                 cursor: pointer;
-                box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4);
+                box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
                 z-index: 999998;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                animation: dv-pulse 2s infinite;
+                transition: transform 0.2s, box-shadow 0.2s;
+            }
+            #dv-toggle:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 16px rgba(99, 102, 241, 0.4);
             }
             #dv-toggle.hidden { display: none !important; }
-            #dv-toggle img { width: 45px; height: 45px; border-radius: 50%; }
-            #dv-toggle::after {
-                content: '💬';
-                position: absolute;
-                top: -8px;
-                right: -8px;
-                background: #ef4444;
-                padding: 4px 8px;
-                border-radius: 12px;
-                font-size: 12px;
-            }
-            @keyframes dv-pulse {
-                0%, 100% { transform: scale(1); box-shadow: 0 8px 32px rgba(99, 102, 241, 0.4); }
-                50% { transform: scale(1.05); box-shadow: 0 8px 40px rgba(99, 102, 241, 0.6); }
-            }
+            #dv-toggle span { color: white; font-size: 18px; }
             
             /* CHAT CONTAINER */
             #dv-chat {
@@ -250,8 +240,8 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
             
             /* MOBILE */
             @media (max-width: 500px) {
-                #dv-toggle { width: 60px; height: 60px; bottom: 1rem; right: 1rem; }
-                #dv-toggle img { width: 40px; height: 40px; }
+                #dv-toggle { width: 36px; height: 36px; top: 0.75rem; right: 0.75rem; }
+                #dv-toggle span { font-size: 16px; }
                 #dv-chat {
                     top: 0; left: 0; right: 0; bottom: 0;
                     width: 100%; height: 100%;
@@ -269,7 +259,7 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
     function createHTML() {
         const html = `
             <button id="dv-toggle">
-                <img src="${LOGO_URL}" alt="Chat" onerror="this.outerHTML='📚'">
+                <span>✕</span>
             </button>
             <div id="dv-chat">
                 <div id="dv-header">
