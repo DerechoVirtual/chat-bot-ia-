@@ -731,17 +731,37 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
         input.setAttribute('type', config.type);
     }
 
+    // Auto-open chatbot after 25 seconds if not opened manually
+    function autoOpen() {
+        const toggle = document.getElementById('dv-chatbot-toggle');
+        const container = document.getElementById('dv-chatbot-container');
+        const input = document.getElementById('dv-chatbot-input');
+
+        // Only auto-open if chat hasn't been opened yet
+        if (!container.classList.contains('active') && chatState.conversationHistory.length === 0) {
+            container.classList.add('active');
+            toggle.classList.add('active');
+            sendNextBotMessage();
+            startReminderTimer();
+            input.focus();
+        }
+    }
+
     // Auto-initialize when DOM is ready
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function () {
             injectStyles();
             createHTML();
             init();
+            // Auto-open after 25 seconds
+            setTimeout(autoOpen, 25000);
         });
     } else {
         injectStyles();
         createHTML();
         init();
+        // Auto-open after 25 seconds
+        setTimeout(autoOpen, 25000);
     }
 
 })();
