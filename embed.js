@@ -381,8 +381,12 @@ REGLA DE ORO: SIEMPRE termina con una pregunta que acerque a la demo:
                     border-radius: 0;
                     z-index: 9999999;
                 }
-                .dv-chatbot-toggle.active {
+                .dv-chatbot-toggle.active,
+                .dv-chatbot-toggle[style*="display: none"] {
                     display: none !important;
+                    visibility: hidden !important;
+                    opacity: 0 !important;
+                    pointer-events: none !important;
                 }
                 .dv-chatbot-toggle {
                     bottom: 1rem;
