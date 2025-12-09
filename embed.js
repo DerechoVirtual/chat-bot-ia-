@@ -62,8 +62,8 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
                 position: fixed;
                 bottom: 1.5rem;
                 right: 1.5rem;
-                width: 65px;
-                height: 65px;
+                width: 75px;
+                height: 75px;
                 background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
                 border-radius: 50%;
                 border: none;
@@ -77,7 +77,7 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
                 animation: dv-pulse 2s infinite;
             }
             #dv-toggle:hover { transform: scale(1.1); }
-            #dv-toggle img { width: 40px; height: 40px; border-radius: 50%; }
+            #dv-toggle img { width: 45px; height: 45px; border-radius: 50%; }
             #dv-toggle::after {
                 content: '1';
                 position: absolute;
@@ -85,10 +85,10 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
                 right: 0;
                 background: #ef4444;
                 color: white;
-                width: 20px;
-                height: 20px;
+                width: 24px;
+                height: 24px;
                 border-radius: 50%;
-                font-size: 12px;
+                font-size: 14px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -105,10 +105,10 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
             /* CHAT CONTAINER */
             #dv-chat {
                 position: fixed;
-                bottom: 6rem;
+                bottom: 7rem;
                 right: 1.5rem;
-                width: 380px;
-                height: 600px;
+                width: 400px;
+                height: 650px;
                 max-height: 80vh;
                 background: white;
                 border-radius: 1.5rem;
@@ -131,30 +131,30 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
             #dv-header {
                 background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
                 color: white;
-                padding: 1rem;
+                padding: 1.2rem;
                 display: flex;
                 align-items: center;
-                gap: 0.75rem;
+                gap: 1rem;
             }
-            #dv-header img { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.1); }
-            #dv-header-info h4 { margin: 0; font-size: 1rem; font-weight: 600; }
-            #dv-header-info span { font-size: 0.8rem; opacity: 0.9; display: flex; align-items: center; gap: 4px; }
-            #dv-header-info span::before { content: ''; display: block; width: 8px; height: 8px; background: #4ade80; border-radius: 50%; }
+            #dv-header img { width: 48px; height: 48px; border-radius: 50%; background: rgba(255,255,255,0.1); }
+            #dv-header-info h4 { margin: 0; font-size: 1.2rem; font-weight: 600; }
+            #dv-header-info span { font-size: 0.95rem; opacity: 0.9; display: flex; align-items: center; gap: 4px; }
+            #dv-header-info span::before { content: ''; display: block; width: 10px; height: 10px; background: #4ade80; border-radius: 50%; }
             
             /* CLOSE BUTTON (Header) */
             #dv-close {
                 margin-left: auto;
                 background: rgba(255,255,255,0.2);
                 border: none;
-                width: 32px;
-                height: 32px;
+                width: 36px;
+                height: 36px;
                 border-radius: 50%;
                 color: white;
                 cursor: pointer;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 18px;
+                font-size: 20px;
                 transition: background 0.2s;
             }
             #dv-close:hover { background: rgba(255,255,255,0.3); }
@@ -163,7 +163,7 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
             #dv-messages {
                 flex: 1;
                 overflow-y: auto;
-                padding: 1rem;
+                padding: 1.2rem;
                 display: flex;
                 flex-direction: column;
                 gap: 1rem;
@@ -171,9 +171,9 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
             }
             .dv-msg {
                 max-width: 85%;
-                padding: 0.8rem 1rem;
+                padding: 1rem 1.2rem;
                 border-radius: 1rem;
-                font-size: 0.95rem;
+                font-size: 1.1rem;
                 line-height: 1.5;
                 position: relative;
             }
@@ -194,25 +194,25 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
             
             /* INPUT AREA */
             #dv-input-wrap {
-                padding: 1rem;
+                padding: 1.2rem;
                 background: white;
                 border-top: 1px solid #e2e8f0;
                 display: flex;
-                gap: 0.5rem;
+                gap: 0.8rem;
             }
             #dv-input {
                 flex: 1;
-                padding: 0.8rem 1rem;
+                padding: 1rem 1.2rem;
                 border: 2px solid #e2e8f0;
                 border-radius: 2rem;
-                font-size: 16px; /* Prevents zoom on iOS */
+                font-size: 1.1rem;
                 outline: none;
                 transition: border-color 0.2s;
             }
             #dv-input:focus { border-color: #6366f1; }
             #dv-send {
-                width: 46px;
-                height: 46px;
+                width: 52px;
+                height: 52px;
                 background: #6366f1;
                 color: white;
                 border: none;
@@ -221,7 +221,7 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                font-size: 18px;
+                font-size: 22px;
                 transition: transform 0.2s;
             }
             #dv-send:hover { transform: scale(1.05); }
@@ -231,12 +231,13 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
                 background: #6366f1;
                 color: white;
                 border: none;
-                padding: 12px 24px;
+                padding: 14px 28px;
                 border-radius: 2rem;
                 font-weight: 600;
                 cursor: pointer;
                 width: 100%;
                 margin-top: 0.5rem;
+                font-size: 1.1rem;
                 transition: transform 0.2s;
             }
             .dv-calendly:hover { transform: scale(1.02); }
@@ -244,10 +245,10 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
             /* MOBILE OPTIMIZATIONS */
             @media (max-width: 480px) {
                 #dv-toggle {
-                    width: 60px;
-                    height: 60px;
-                    bottom: 1rem;
-                    right: 1rem;
+                    width: 70px;
+                    height: 70px;
+                    bottom: 1.5rem;
+                    right: 1.5rem;
                 }
                 
                 #dv-chat {
@@ -273,13 +274,13 @@ REGLA: SIEMPRE termina con una pregunta que acerque a la demo.`;
                 }
                 
                 .dv-msg {
-                    font-size: 1rem; /* Larger text for mobile */
+                    font-size: 1.1rem; /* Larger text for mobile too */
                     max-width: 90%;
                 }
                 
                 #dv-input-wrap {
-                    padding: 0.8rem;
-                    padding-bottom: max(0.8rem, env(safe-area-inset-bottom));
+                    padding: 1rem;
+                    padding-bottom: max(1rem, env(safe-area-inset-bottom));
                 }
             }
         `;
